@@ -23,7 +23,7 @@ func NewPluginMoyu() plugin.Plugin {
 }
 
 func (p *PluginMoyu) Init(engine *zero.Engine, env plugin.Env) error {
-	err := env.GetConf(p.conf)
+	err := env.GetConf(&p.conf)
 	if err != nil {
 		return err
 	}
