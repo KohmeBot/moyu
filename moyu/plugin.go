@@ -44,7 +44,7 @@ func (p *PluginMoyu) Commands() fmt.Stringer {
 }
 
 func (p *PluginMoyu) Version() uint64 {
-	return uint64(version.NewVersion(0, 0, 10))
+	return uint64(version.NewVersion(0, 0, 11))
 }
 
 func (p *PluginMoyu) OnBoot() {
@@ -66,6 +66,11 @@ func (p *PluginMoyu) OnBoot() {
 			return
 		}
 		defer resp.Body.Close()
+		if resp.StatusCode != http.StatusOK {
+			err = fmt.Errorf("status code: %d: %s", resp.StatusCode, resp.Status)
+			return
+		}
+
 		img, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return
