@@ -9,6 +9,7 @@ github.com/jinzhu/now v1.1.5 h1:/o9tlHleP7gOFmsnYNz3RGnqzefHA47wQpKrrdTIwXQ=
 github.com/jinzhu/now v1.1.5/go.mod h1:d3SSVoowX0Lcu0IBviAWJpolVfI5UJVZZ7cO71lE/z8=
 github.com/kohmebot/chatai v0.0.35 h1:Q2mW4pxgWbbhEoOEIJXvI+Mv95v7+HduSMZ7wKjWkpA=
 github.com/kohmebot/chatai v0.0.35/go.mod h1:Sx5MYJFZPO17mC7kOSjCOjkZ4zh6SQD4zQdfLlVcFUY=
+github.com/kohmebot/chatai v0.0.55/go.mod h1:Sx5MYJFZPO17mC7kOSjCOjkZ4zh6SQD4zQdfLlVcFUY=
 github.com/kohmebot/pkg v1.0.1 h1:2VTvPu6DP+tM2CLF9Uiwf1Fp77nXRgqjmFNI6G7Hips=
 github.com/kohmebot/pkg v1.0.1/go.mod h1:ln2tcr0LXDri5Si8bcLGc1Ek0sDJuy4M7qjOGO0eQJU=
 github.com/kohmebot/plugin v1.2.5 h1:pBIGipMT8c1ivYdvGWoG1mMVXnoPFw40VkOGKANeya0=

@@ -3,7 +3,6 @@ package moyu
 import (
 	"fmt"
 	"github.com/kohmebot/chatai/chatai/chataisdk"
-	"github.com/kohmebot/chatai/chatai/model"
 	"github.com/kohmebot/pkg/command"
 	"github.com/kohmebot/pkg/version"
 	"github.com/kohmebot/plugin"
@@ -13,15 +12,13 @@ import (
 	"io"
 	"math/rand/v2"
 	"net/http"
-	"sync"
 )
 
 type PluginMoyu struct {
-	conf  Config
-	env   plugin.Env
-	batch model.Batch
+	conf Config
+	env  plugin.Env
 
-	on chan model.OnResponse
+	invoker *chataisdk.ChatAIInvoker
 }
 
 func NewPluginMoyu() plugin.Plugin {
@@ -29,24 +26,15 @@ func NewPluginMoyu() plugin.Plugin {
 }
 
 func (p *PluginMoyu) Init(engine *zero.Engine, env plugin.Env) error {
-	p.on = make(chan model.OnResponse, 1)
 	err := env.GetConf(&p.conf)
 	if err != nil {
 		return err
 	}
 	p.env = env
 	if p.conf.UseAI {
-		p.batch, err = chataisdk.NewBatch(p.env, p.OnAIResponse)
+		p.invoker, err = chataisdk.NewChatAIInvoker(env)
 	}
-	return nil
-}
-
-func (p *PluginMoyu) OnAIResponse(ctx *zero.Ctx, request *model.Request, response *model.Response, err error) {
-	select {
-	case on := <-p.on:
-		on(ctx, request, response, err)
-	default:
-	}
+	return err
 }
 
 func (p *PluginMoyu) GetTips(ctx *zero.Ctx) string {
@@ -57,25 +45,31 @@ func (p *PluginMoyu) GetTips(ctx *zero.Ctx) string {
 	if len(text) <= 0 || !p.conf.UseAI {
 		return text
 	}
-	// use AI
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-	p.on <- func(ctx *zero.Ctx, request *model.Request, response *model.Response, err error) {
-		defer wg.Done()
-		if err != nil {
-			p.env.Error(ctx, err)
-			return
-		}
-		if len(response.ErrorMsg) > 0 {
-			p.env.Error(ctx, fmt.Errorf(response.ErrorMsg))
-			return
-		}
-		text = response.Answer
-	}
-	p.batch.Submit(ctx, model.Key{}, []string{text})
-	wg.Wait()
 
-	return text
+	// useAi
+	resp, err := p.invoker.DoRequest(text)
+	if err != nil {
+		p.env.Error(ctx, err)
+		return text
+	}
+	return resp
+}
+
+func (p *PluginMoyu) GetImage() ([]byte, error) {
+	resp, err := http.Get("https://api.vvhan.com/api/moyu")
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("status code: %d: %s", resp.StatusCode, resp.Status)
+	}
+
+	img, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	return img, nil
 }
 
 func (p *PluginMoyu) Name() string {
@@ -91,7 +85,7 @@ func (p *PluginMoyu) Commands() fmt.Stringer {
 }
 
 func (p *PluginMoyu) Version() uint64 {
-	return uint64(version.NewVersion(0, 0, 20))
+	return uint64(version.NewVersion(0, 0, 25))
 }
 
 func (p *PluginMoyu) OnBoot() {
@@ -102,37 +96,22 @@ func (p *PluginMoyu) OnBoot() {
 	}
 	c := cron.New()
 	_, err := c.AddFunc(p.conf.SendCron, func() {
-		var err error
-		defer func() {
-			if err != nil {
-				sendErr(err)
-			}
-		}()
-		resp, err := http.Get("https://api.vvhan.com/api/moyu")
-		if err != nil {
-			return
-		}
-		defer resp.Body.Close()
-		if resp.StatusCode != http.StatusOK {
-			err = fmt.Errorf("status code: %d: %s", resp.StatusCode, resp.Status)
-			return
-		}
 
-		img, err := io.ReadAll(resp.Body)
+		img, err := p.GetImage()
 		if err != nil {
-			return
+			sendErr(err)
 		}
-
-		imgMsg := message.ImageBytes(img)
 
 		for ctx := range p.env.RangeBot {
 			text := p.GetTips(ctx)
-			textMsg := message.Text(text)
 			for gid := range p.env.Groups().RangeGroup {
 				if len(text) > 0 {
-					ctx.SendGroupMessage(gid, textMsg)
+					ctx.SendGroupMessage(gid, message.Text(text))
 				}
-				ctx.SendGroupMessage(gid, imgMsg)
+				if len(img) > 0 {
+					ctx.SendGroupMessage(gid, message.ImageBytes(img))
+				}
+
 			}
 		}
 
