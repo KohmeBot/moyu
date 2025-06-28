@@ -85,7 +85,7 @@ func (p *PluginMoyu) Commands() fmt.Stringer {
 }
 
 func (p *PluginMoyu) Version() uint64 {
-	return uint64(version.NewVersion(0, 0, 25))
+	return uint64(version.NewVersion(0, 0, 26))
 }
 
 func (p *PluginMoyu) OnBoot() {
