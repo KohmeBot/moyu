@@ -21,7 +21,7 @@ type PluginMoyu struct {
 	invoker *chataisdk.ChatAIInvoker
 }
 
-func NewPluginMoyu() plugin.Plugin {
+func NewPlugin() plugin.Plugin {
 	return new(PluginMoyu)
 }
 
@@ -85,7 +85,7 @@ func (p *PluginMoyu) Commands() fmt.Stringer {
 }
 
 func (p *PluginMoyu) Version() uint64 {
-	return uint64(version.NewVersion(0, 0, 27))
+	return uint64(version.NewVersion(0, 0, 28))
 }
 
 func (p *PluginMoyu) OnBoot() {
