@@ -5,7 +5,7 @@ import (
 	"github.com/kohmebot/chatai/chatai/chataisdk"
 	"github.com/kohmebot/pkg/command"
 	"github.com/kohmebot/pkg/version"
-	"github.com/kohmebot/plugin"
+	"github.com/kohmebot/plugin/v2"
 	"github.com/robfig/cron/v3"
 	"github.com/wdvxdr1123/ZeroBot"
 	"github.com/wdvxdr1123/ZeroBot/message"
@@ -25,7 +25,7 @@ func NewPlugin() plugin.Plugin {
 	return new(PluginMoyu)
 }
 
-func (p *PluginMoyu) Init(engine *zero.Engine, env plugin.Env) error {
+func (p *PluginMoyu) OnInit(engine plugin.Engine, env plugin.Env) error {
 	err := env.GetConf(&p.conf)
 	if err != nil {
 		return err
@@ -76,23 +76,20 @@ func (p *PluginMoyu) Name() string {
 	return "moyu"
 }
 
-func (p *PluginMoyu) Description() string {
-	return "每日发送摸鱼日历"
+func (p *PluginMoyu) Version() string {
+	return "v0.1.0"
 }
 
-func (p *PluginMoyu) Commands() fmt.Stringer {
-	return command.NewCommands()
-}
+func (p *PluginMoyu) OnHelp(ctx *zero.Ctx) {
 
-func (p *PluginMoyu) Version() uint64 {
-	return uint64(version.NewVersion(0, 0, 28))
 }
 
 func (p *PluginMoyu) OnBoot() {
 	sendErr := func(err error) {
-		for ctx := range p.env.RangeBot {
+		p.env.UseBot(func(ctx *zero.Ctx) {
 			p.env.Error(ctx, err)
-		}
+		})
+
 	}
 	c := cron.New()
 	_, err := c.AddFunc(p.conf.SendCron, func() {
