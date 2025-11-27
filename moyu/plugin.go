@@ -3,8 +3,6 @@ package moyu
 import (
 	"fmt"
 	"github.com/kohmebot/chatai/chatai/chataisdk"
-	"github.com/kohmebot/pkg/command"
-	"github.com/kohmebot/pkg/version"
 	"github.com/kohmebot/plugin/v2"
 	"github.com/robfig/cron/v3"
 	"github.com/wdvxdr1123/ZeroBot"
@@ -99,9 +97,9 @@ func (p *PluginMoyu) OnBoot() {
 			sendErr(err)
 		}
 
-		for ctx := range p.env.RangeBot {
+		p.env.UseBot(func(ctx *zero.Ctx) {
 			text := p.GetTips(ctx)
-			for gid := range p.env.Groups().RangeGroup {
+			for gid := range p.env.Groups().RangeGroup() {
 				if len(text) > 0 {
 					ctx.SendGroupMessage(gid, message.Text(text))
 				}
@@ -110,7 +108,7 @@ func (p *PluginMoyu) OnBoot() {
 				}
 
 			}
-		}
+		})
 
 	})
 	if err != nil {
